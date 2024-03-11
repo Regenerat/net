@@ -95,6 +95,10 @@ class SiteController extends Controller
      */
     public function actionRegister()
     {
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+        
         $model = new User();
 
         if ($this->request->isPost) {
