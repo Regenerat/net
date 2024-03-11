@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use app\models\Report;
 use app\models\ReportSearch;
+use app\models\Role;
+use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -35,11 +37,22 @@ class ReportController extends Controller
      * Lists all Report models.
      *
      * @return string
+     * 
      */
     public function actionIndex()
     {
         $searchModel = new ReportSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        $user = Yii::$app->user->identity;
+        $userID = null;
+
+        if (!$user) {
+            return $this->goHome();
+        }       
+        if ($user->role_id != Role::ADMIN_ID) {
+            $userID = $user->id;
+        }
+
+        $dataProvider = $searchModel->search($this->request->queryParams, $userID);
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -94,7 +107,7 @@ class ReportController extends Controller
         $model = $this->findModel($id);
 
         if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect(['index', 'id' => $model->id]);
         }
 
         return $this->render('update', [

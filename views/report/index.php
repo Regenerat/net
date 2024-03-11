@@ -1,6 +1,14 @@
+<style>
+    .butt {
+        justify-content: center;
+        display: flex;
+    }
+</style>
+
 <?php
 
 use app\models\Report;
+use app\models\Role;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -9,6 +17,7 @@ use yii\grid\GridView;
 /** @var yii\web\View $this */
 /** @var app\models\ReportSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */
+
 
 $this->title = 'Reports';
 $this->params['breadcrumbs'][] = $this->title;
@@ -35,7 +44,10 @@ $this->params['breadcrumbs'][] = $this->title;
             'user_id',
             'status_id',
             [
+                'header' => 'Сменить статус',
                 'class' => ActionColumn::className(),
+                'visible' => Yii::$app->user->identity->role_id  == Role::ADMIN_ID ? true : false,
+                'template' => '<div class="butt">{update}</div>',
                 'urlCreator' => function ($action, Report $model, $key, $index, $column) {
                     return Url::toRoute([$action, 'id' => $model->id]);
                  }
