@@ -20,6 +20,10 @@ use Yii;
  */
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
+    public function __toString() {
+        return (string) $this->login;
+    }
+
     /**
      * {@inheritdoc}
      */
