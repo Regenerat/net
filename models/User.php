@@ -2,85 +2,38 @@
 
 namespace app\models;
 
-use Yii;
-
-/**
- * This is the model class for table "{{%user}}".
- *
- * @property int $id
- * @property string|null $login
- * @property string|null $password
- * @property string|null $email
- * @property string|null $phone
- * @property string|null $fio
- * @property int|null $role_id
- *
- * @property Report[] $reports
- * @property Role $role
- */
-class User extends \yii\db\ActiveRecord
+class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
-    {
-        return '{{%user}}';
-    }
+    public $id;
+    public $username;
+    public $password;
+    public $authKey;
+    public $accessToken;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function rules()
-    {
-        return [
-            [['role_id'], 'integer'],
-            [['login', 'password', 'email', 'phone', 'fio'], 'string', 'max' => 255],
-            [['role_id'], 'exist', 'skipOnError' => true, 'targetClass' => Role::class, 'targetAttribute' => ['role_id' => 'id']],
-        ];
-    }
+    private static $users = [
+        '100' => [
+            'id' => '100',
+            'username' => 'admin',
+            'password' => 'admin',
+            'authKey' => 'test100key',
+            'accessToken' => '100-token',
+        ],
+        '101' => [
+            'id' => '101',
+            'username' => 'demo',
+            'password' => 'demo',
+            'authKey' => 'test101key',
+            'accessToken' => '101-token',
+        ],
+    ];
 
-    /**
-     * {@inheritdoc}
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'login' => 'Login',
-            'password' => 'Password',
-            'email' => 'Email',
-            'phone' => 'Phone',
-            'fio' => 'Fio',
-            'role_id' => 'Role ID',
-        ];
-    }
 
-     /**
-     * Gets query for [[Reports]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getReports()
-    {
-        return $this->hasMany(Report::class, ['user_id' => 'id']);
-    }
-
-    /**
-     * Gets query for [[Role]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getRole()
-    {
-        return $this->hasOne(Role::class, ['id' => 'role_id']);
-    }
     /**
      * {@inheritdoc}
      */
     public static function findIdentity($id)
     {
-        return static::findOne(['id' => $id]);
+        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
     }
 
     /**
@@ -88,6 +41,12 @@ class User extends \yii\db\ActiveRecord
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
+        foreach (self::$users as $user) {
+            if ($user['accessToken'] === $token) {
+                return new static($user);
+            }
+        }
+
         return null;
     }
 
@@ -97,12 +56,14 @@ class User extends \yii\db\ActiveRecord
      * @param string $username
      * @return static|null
      */
-    public static function login($username, $password)
+    public static function findByUsername($username)
     {
-        $user = static::findOne(['login' => $username]);
-        if ($user && $user->validatePassword($password)) {
-            return $user;
+        foreach (self::$users as $user) {
+            if (strcasecmp($user['username'], $username) === 0) {
+                return new static($user);
+            }
         }
+
         return null;
     }
 
@@ -119,7 +80,7 @@ class User extends \yii\db\ActiveRecord
      */
     public function getAuthKey()
     {
-        return null;
+        return $this->authKey;
     }
 
     /**
@@ -127,7 +88,7 @@ class User extends \yii\db\ActiveRecord
      */
     public function validateAuthKey($authKey)
     {
-        return null;
+        return $this->authKey === $authKey;
     }
 
     /**
@@ -141,4 +102,3 @@ class User extends \yii\db\ActiveRecord
         return $this->password === $password;
     }
 }
-
